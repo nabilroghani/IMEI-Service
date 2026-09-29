@@ -16,16 +16,32 @@ app.set('trust proxy', 1);
 app.use(express.json());
 
 // Global CORS Configuration
-const corsOrigin = process.env.CORS_ORIGIN || '*';
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
 const corsOptions = {
-  origin: corsOrigin === '*' ? true : corsOrigin.split(',').map(s => s.trim()),
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+
 
 // Ensure DB is connected and seed initial data safely
 let isSeeded = false;
